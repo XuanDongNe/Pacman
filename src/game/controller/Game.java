@@ -25,10 +25,12 @@ import game.model.utils.CollisionDetector;
 import game.model.utils.CsvReader;
 import game.model.utils.KeyHandler;
 import game.view.GameLauncher;
+import game.view.ScorePagePanel;
+import game.view.UIPanel;
 
-//Classe gérant le jeu en lui même
+//Lớp quản lý trò chơi
 public class Game implements Observer {
-	// Pour lister les différentes entités présentes sur la fenêtre
+	// Danh sách các thực thể trên màn hình
 	private List<Entity> objects = new ArrayList();
 	private List<Ghost> ghosts = new ArrayList();
 	private static List<Wall> walls = new ArrayList();
@@ -38,13 +40,15 @@ public class Game implements Observer {
 
 	private static boolean firstInput = false;
 
+	// Phương thức khởi tạo của Game
 	public Game() {
-		// Initialisation du jeu
+		// Khởi tạo trò chơi
 
-		// Chargement du fichier csv du niveau
+		// Đọc dữ liệu từ tệp csv chứa mô tả của màn chơi
 		List<List<String>> data = null;
 		try {
-			data = new CsvReader().parseCsv(getClass().getClassLoader().getResource("resources/level/level.csv").toURI());
+			data = new CsvReader()
+					.parseCsv(getClass().getClassLoader().getResource("resources/level/level2.csv").toURI());
 		} catch (URISyntaxException e) {
 			e.printStackTrace();
 		}
@@ -55,22 +59,21 @@ public class Game implements Observer {
 		CollisionDetector collisionDetector = new CollisionDetector(this);
 		AbstractGhostFactory abstractGhostFactory = null;
 
-		// Le niveau a une "grille", et pour chaque case du fichier csv, on affiche une
-		// entité parculière sur une case de la grille selon le caracère présent
+		// Duyệt qua mỗi ô trong màn chơi và tạo các thực thể tương ứng
 		for (int xx = 0; xx < cellsPerRow; xx++) {
 			for (int yy = 0; yy < cellsPerColumn; yy++) {
 				String dataChar = data.get(yy).get(xx);
-				if (dataChar.equals("x")) { // Création des murs
+				if (dataChar.equals("x")) { // Tạo các thành phần của bức tường
 					objects.add(new Wall(xx * cellSize, yy * cellSize));
-				} else if (dataChar.equals("P")) { // Création de Pacman
+				} else if (dataChar.equals("P")) { // Tạo nhân vật Pacman
 					pacman = new Pacman(xx * cellSize, yy * cellSize);
 					pacman.setCollisionDetector(collisionDetector);
 
-					// Enregistrement des différents observers de Pacman
+					// Đăng ký các Observer của Pacman
 					pacman.registerObserver(GameLauncher.getUIPanel());
 					pacman.registerObserver(this);
 				} else if (dataChar.equals("b") || dataChar.equals("p") || dataChar.equals("i")
-						|| dataChar.equals("c")) { // Création des fantômes en utilisant les différentes factories
+						|| dataChar.equals("c")) { // Tạo các con ma
 					switch (dataChar) {
 					case "b":
 						abstractGhostFactory = new BlinkyFactory();
@@ -91,11 +94,11 @@ public class Game implements Observer {
 					if (dataChar.equals("b")) {
 						blinky = (Blinky) ghost;
 					}
-				} else if (dataChar.equals(".")) { // Création des PacGums
+				} else if (dataChar.equals(".")) { // Tạo viên gạch Pacman
 					objects.add(new PacGum(xx * cellSize, yy * cellSize));
-				} else if (dataChar.equals("o")) { // Création des SuperPacGums
+				} else if (dataChar.equals("o")) { // Tạo viên gạch đặc biệt Pacman
 					objects.add(new SuperPacGum(xx * cellSize, yy * cellSize));
-				} else if (dataChar.equals("-")) { // Création des murs de la maison des fantômes
+				} else if (dataChar.equals("-")) { // Tạo các thành phần của nhà ma
 					objects.add(new GhostHouse(xx * cellSize, yy * cellSize));
 				}
 			}
@@ -110,15 +113,17 @@ public class Game implements Observer {
 		}
 	}
 
+	// Phương thức trả về danh sách các thành phần tường
 	public static List<Wall> getWalls() {
 		return walls;
 	}
 
+	// Phương thức trả về danh sách các thực thể
 	public List<Entity> getEntities() {
 		return objects;
 	}
 
-	// Mise à jour de toutes les entités
+	// Phương thức cập nhật trạng thái của tất cả các thực thể
 	public void update() {
 		for (Entity o : objects) {
 			if (!o.isDestroyed())
@@ -126,12 +131,12 @@ public class Game implements Observer {
 		}
 	}
 
-	// Gestion des inputs
+	// Phương thức xử lý các input từ người chơi
 	public void input(KeyHandler k) {
 		pacman.input(k);
 	}
 
-	// Rendu de toutes les entités
+	// Phương thức vẽ tất cả các thực thể lên màn hình
 	public void render(Graphics2D g) {
 		for (Entity o : objects) {
 			if (!o.isDestroyed())
@@ -139,49 +144,56 @@ public class Game implements Observer {
 		}
 	}
 
+	// Phương thức trả về đối tượng Pacman
 	public static Pacman getPacman() {
 		return pacman;
 	}
 
+	// Phương thức trả về đối tượng Blinky
 	public static Blinky getBlinky() {
 		return blinky;
 	}
 
-	// Le jeu est notifiée lorsque Pacman est en contact avec une PacGum, une
-	// SuperPacGum ou un fantôme
+	// Phương thức được gọi khi một viên gạch Pacman được ăn
 	@Override
 	public void updatePacGumEaten(PacGum pg) {
-		pg.destroy(); // La PacGum est détruite quand Pacman la mange
+		pg.destroy(); // Viên gạch Pacman được phá hủy khi Pacman ăn nó
 	}
 
+	// Phương thức được gọi khi một viên gạch đặc biệt Pacman được ăn
 	@Override
 	public void updateSuperPacGumEaten(SuperPacGum spg) {
-		spg.destroy(); // La SuperPacGum est détruite quand Pacman la mange
+		spg.destroy(); // Viên gạch đặc biệt Pacman được phá hủy khi Pacman ăn nó
 		for (Ghost gh : ghosts) {
-			gh.getState().superPacGumEaten(); // S'il existe une transition particulière quand une SuperPacGum est
-												// mangée, l'état des fantômes change
+			gh.getState().superPacGumEaten(); // Nếu có sự chuyển đổi đặc biệt khi một viên gạch đặc biệt Pacman được
+												// ăn, trạng thái của các con ma sẽ thay đổi
 		}
 	}
 
+	// Phương thức được gọi khi Pacman va chạm với một con ma
 	@Override
 	public void updateGhostCollision(Ghost gh) {
 		if (gh.getState() instanceof FrightenedMode) {
-			gh.getState().eaten(); // S'il existe une transition particulière quand le fantôme est mangé, son état
-									// change en conséquence
+			gh.getState().eaten(); // Nếu có sự chuyển đổi đặc biệt khi con ma bị ăn, trạng thái của con ma sẽ thay
+									// đổi tương ứng
 		} else if (!(gh.getState() instanceof EatenMode)) {
-			System.out.println("Game over !\nScore : " + GameLauncher.getUIPanel().getScore()); // Quand Pacman rentre
-																								// en contact avec un
-																								// Fantôme qui n'est ni
-																								// effrayé, ni mangé,
-																								// c'est game over !
-			System.exit(0); // TODO
+			// Khi Pacman va chạm với một con ma không trong trạng thái sợ hãi hoặc đã bị
+			UIPanel uiPanel = GameLauncher.getUIPanel();
+			uiPanel.showRestartButton();
+			
+			GameplayPanel gameplayPanel = new GameplayPanel();
+			gameplayPanel.stop();
+			gameplayPanel.run();
+			System.out.println("Game over !\nScore : " + GameLauncher.getUIPanel().getScore());
 		}
 	}
 
+	// Phương thức thiết lập trạng thái của việc nhận input lần đầu tiên
 	public static void setFirstInput(boolean b) {
 		firstInput = b;
 	}
 
+	// Phương thức trả về trạng thái của việc nhận input lần đầu tiên
 	public static boolean getFirstInput() {
 		return firstInput;
 	}

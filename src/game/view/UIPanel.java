@@ -5,183 +5,121 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.SwingConstants;
 
+import game.controller.GameplayPanel;
 import game.model.Observer;
 import game.model.entities.ghosts.Ghost;
 import game.model.entities.pacman.PacGum;
 import game.model.entities.pacman.SuperPacGum;
 import game.model.ghostStates.FrightenedMode;
 
-////Giao diện người dùng
-//public class UIPanel extends JPanel implements Observer {
-//	public static int width;
-//	public static int height;
-//
-//	private int score = 0;
-//	private JLabel scoreLabel;
-//
-//	public UIPanel(int width, int height) {
-//		this.width = width;
-//		this.height = height;
-//		setPreferredSize(new Dimension(width, height));
-//		this.setBackground(Color.black);
-//		scoreLabel = new JLabel("Score: " + score); // Tạo một nhãn để hiển thị điểm
-//		scoreLabel.setFont(scoreLabel.getFont().deriveFont(20.0F));
-//		scoreLabel.setForeground(Color.white);
-//		this.add(scoreLabel, BorderLayout.WEST);
-//	}
-//
-//	public void updateScore(int incrScore) {
-//		this.score += incrScore; // Tăng điểm
-//		this.scoreLabel.setText("Score: " + score); // Cập nhật nhãn điểm
-//	}
-//
-//	public int getScore() {
-//		return score;
-//	}
-//
-//	// Giao diện được thông báo khi Pacman tiếp xúc với một PacGum, SuperPacGum hoặc
-//	// ma, và cập nhật điểm hiển thị tương ứng
-//	@Override
-//	public void updatePacGumEaten(PacGum pg) {
-//		updateScore(10); // Cập nhật điểm khi Pacman ăn một PacGum
-//
-//	}
-//
-//	@Override
-//	public void updateSuperPacGumEaten(SuperPacGum spg) {
-//		updateScore(100); // Cập nhật điểm khi Pacman ăn một SuperPacGum
-//
-//	}
-//
-//	@Override
-//	public void updateGhostCollision(Ghost gh) {
-//		if (gh.getState() instanceof FrightenedMode) { // Trong trường hợp Pacman va vào một ma, chỉ cập nhật điểm khi
-//			// ma ở chế độ "sợ hãi"
-//			updateScore(500); // Cập nhật điểm khi Pacman ăn một ma
-//		}
-//
-//	}
-//}
-
-
-
-//Panneau de l'interface utilisateur
 public class UIPanel extends JPanel implements Observer {
-  public static int width;
-  public static int height;
+	public static int width;
+	public static int height;
 
-  private int score = 0;
-  private JLabel scoreLabel;
+	private int score = 0;
+	private JLabel scoreLabel;
 
-  public UIPanel(int width, int height) {
-      this.width = width;
-      this.height = height;
-      setPreferredSize(new Dimension(width, height));
-      this.setBackground(Color.black);
-      scoreLabel = new JLabel("Score: " + score);
-      scoreLabel.setFont(scoreLabel.getFont().deriveFont(20.0F));
-      scoreLabel.setForeground(Color.white);
-   // Buttons
+	private JButton restartButton;
 
-      JButton levelButton = new JButton("Level");
-      JButton scoreButton = new JButton("Score");
-      JButton quitButton = new JButton("Quit");
+	private GameplayPanel gameplayPanel;
 
-      // Button Action Listeners
+	public UIPanel() {
+	}
 
-      levelButton.addActionListener(new ActionListener() {
-          @Override
-          public void actionPerformed(ActionEvent e) {
-          	 openLevelSelection();
-          }
+	public void setGameplayPanel(GameplayPanel gameplayPanel) {
+		this.gameplayPanel = gameplayPanel;
+	}
 
-          private void openLevelSelection() {
-              JFrame levelSelectionFrame = new JFrame("Select Level");
-              levelSelectionFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE); 
-              levelSelectionFrame.setSize(300, 200);
-              levelSelectionFrame.setLocationRelativeTo(null); 
+	// Hàm khởi tạo của UIPanel
+	public UIPanel(int width, int height) {
+		this.width = width;
+		this.height = height;
+		setPreferredSize(new Dimension(width, height));
+		this.setBackground(Color.black);
+		scoreLabel = new JLabel("Score: " + score);
+		scoreLabel.setFont(scoreLabel.getFont().deriveFont(20.0F));
+		scoreLabel.setForeground(Color.white);
+		scoreLabel.setHorizontalAlignment(SwingConstants.CENTER);
 
-            
-              LevelSelectionPanel levelSelectionPanel = new LevelSelectionPanel(new ActionListener() {
-                  @Override
-                  public void actionPerformed(ActionEvent e) {
-                     
-                      String level = e.getActionCommand();
-                      System.out.println("Selected Level: " + level);
-                      levelSelectionFrame.dispose(); 
-                  }
-              });
-              levelSelectionFrame.add(levelSelectionPanel);
+		// Nút chơi lại
+		restartButton = new JButton("Chơi lại");
+		restartButton.setPreferredSize(new Dimension(100, 50));
+		restartButton.setBounds(150, 100, 100, 50);
+		restartButton.setVisible(false);
 
-              levelSelectionFrame.setVisible(true);
-          }
-      });
+		// Đặt layout của panel thành BorderLayout
+		this.setLayout(new BorderLayout());
 
-      scoreButton.addActionListener(new ActionListener() {
-          @Override
-          public void actionPerformed(ActionEvent e) {
-          	 openScorePage();
-          }
+		// Thêm label điểm số vào panel ở vị trí phía BẮC
+		this.add(scoreLabel, BorderLayout.CENTER);
 
-			private void openScorePage() {
-				JFrame scoreFrame = new JFrame("Score Page");
-		        scoreFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		        scoreFrame.setSize(400, 300);
-		        scoreFrame.setLocationRelativeTo(null);
+		// Thêm nút chơi lại vào panel ở vị trí phía NAM
+		this.add(restartButton, BorderLayout.SOUTH);
 
+		restartButton.addActionListener(new ActionListener() {
+			@Override
+			 public void actionPerformed(ActionEvent e) {
+		        // Tạo một luồng mới để chạy lại phần khởi động của ứng dụng
+		        Thread restartThread = new Thread(() -> {
+		            try {
+		                // Tạm dừng luồng một chút để đảm bảo rằng các tác vụ hiện tại đã hoàn thành trước khi khởi động lại
+		                Thread.sleep(100);
+		            } catch (InterruptedException ex) {
+		                ex.printStackTrace();
+		            }
+
+		            // Gọi phương thức main của GameLauncher để khởi chạy màn hình GameLauncher
+		            GameLauncher.restartGame();
+		        });
 		        
-		        ScorePagePanel scorePagePanel = new ScorePagePanel();
-		        scoreFrame.add(scorePagePanel);
+		        // Bắt đầu chạy luồng mới
+		        restartThread.start();
+		    }
+		});
+	}
 
-		        scoreFrame.setVisible(true);
-			}
-      });
+	// Phương thức cập nhật điểm số
+	public void updateScore(int incrScore) {
+		this.score += incrScore; // Tăng điểm số thêm một lượng incrScore
+		this.scoreLabel.setText("Score: " + score); // Cập nhật label điểm số
+	}
 
-      quitButton.addActionListener(new ActionListener() {
-          @Override
-          public void actionPerformed(ActionEvent e) {
-              
-              System.exit(0);
-          }
-      });
+	// Phương thức trả về điểm số hiện tại
+	public int getScore() {
+		return score;
+	}
 
-     
-      this.add(levelButton);
-      this.add(scoreButton);
-      this.add(quitButton);
-      this.add(scoreLabel, BorderLayout.WEST);
-  }
+	// Phương thức cập nhật điểm số khi Pacman ăn viên gạch PacGum
+	@Override
+	public void updatePacGumEaten(PacGum pg) {
+		updateScore(10); // Cập nhật điểm số thêm 10 điểm
+	}
 
-  public void updateScore(int incrScore) {
-      this.score += incrScore;
-      this.scoreLabel.setText("Score: " + score);
-  }
+	// Phương thức cập nhật điểm số khi Pacman ăn viên gạch đặc biệt SuperPacGum
+	@Override
+	public void updateSuperPacGumEaten(SuperPacGum spg) {
+		updateScore(100); // Cập nhật điểm số thêm 100 điểm
+	}
 
-  public int getScore() {
-      return score;
-  }
+	// Phương thức cập nhật điểm số khi Pacman va chạm với một con ma
+	@Override
+	public void updateGhostCollision(Ghost gh) {
+		if (gh.getState() instanceof FrightenedMode) { // Trong trường hợp Pacman va chạm với một con ma và con ma đang
+														// trong trạng thái sợ hãi
+			updateScore(500); // Cập nhật điểm số thêm 500 điểm
+		}
+	}
 
-  //L'interface est notifiÃ©e lorsque Pacman est en contact avec une PacGum, une SuperPacGum ou un fantÃ´me, et on met Ã  jour le score affichÃ© en consÃ©quence
-  @Override
-  public void updatePacGumEaten(PacGum pg) {
-      updateScore(10);
-  }
-
-  @Override
-  public void updateSuperPacGumEaten(SuperPacGum spg) {
-      updateScore(100);
-  }
-
-  @Override
-  public void updateGhostCollision(Ghost gh) {
-      if (gh.getState() instanceof FrightenedMode) { //Dans le cas oÃ¹ Pacman est en contact avec un fantÃ´me on ne met Ã  jour le score que lorsque ce dernier est en mode "frightened"
-          updateScore(500);
-      }
-  }
+	// Phương thức hiển thị nút chơi lại
+	public void showRestartButton() {
+		this.restartButton.setVisible(true); // Hiển thị nút chơi lại
+	}
 }

@@ -18,7 +18,7 @@ public class GameplayPanel extends JPanel implements Runnable {
 	public static int width;
 	public static int height;
 	private Thread thread;
-	private boolean running = false;
+	private boolean running = true;
 
 	private BufferedImage img;
 	private Graphics2D g;
@@ -28,17 +28,34 @@ public class GameplayPanel extends JPanel implements Runnable {
 
 	private Game game;
 
+	public Game getGame() {
+		return game;
+	}
+
+	public void setGame(Game game) {
+		this.game = game;
+	}
+
+	public boolean isRunning() {
+		return running;
+	}
+
+	public void setRunning(boolean running) {
+		this.running = running;
+	}
+
+	public GameplayPanel() {
+		super();
+	}
+
 	public GameplayPanel(int width, int height) throws IOException {
 		this.width = width;
 		this.height = height;
 		setPreferredSize(new Dimension(width, height));
 		setFocusable(true);
 		requestFocus();
-//		FileInputStream fis = new FileInputStream("resources/img/background.png");
-//		BufferedImage backgroundImage = ImageIO.read(fis);
-		backgroundImage = ImageIO.read(getClass().getClassLoader().getResource("resources/img/background.png")); // Đọc hình nền
-																										// từ tệp hình
-																										// ảnh
+		// Đọc hình nền từ tệp hình ảnh
+		backgroundImage = ImageIO.read(getClass().getClassLoader().getResource("resources/img/background.png"));
 	}
 
 	@Override
@@ -49,11 +66,15 @@ public class GameplayPanel extends JPanel implements Runnable {
 			thread = new Thread(this, "GameThread");
 			thread.start();
 		}
+//		
+//		 // Khởi tạo g2
+//		Graphics g2 = this.getGraphics();
+
 	}
 
 	// Khởi tạo trò chơi
 	public void init() {
-		running = true;
+//		running = true;
 		img = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
 		g = (Graphics2D) img.getGraphics();
 
@@ -83,11 +104,30 @@ public class GameplayPanel extends JPanel implements Runnable {
 
 	// Hiển thị trò chơi: chúng ta hiển thị hình ảnh đã vẽ
 	public void draw() {
-		Graphics g2 = this.getGraphics();
-		g2.drawImage(img, 0, 0, width, height, null); // Hiển thị hình ảnh
-		g2.dispose();
+		Graphics g2 = getGraphics();
+		if (g2 != null) {
+			g2.drawImage(img, 0, 0, width, height, null); // Hiển thị hình ảnh
+			g2.dispose();
+		}
 	}
 
+	public void stop() {
+		running = false; // Dừng vòng lặp chạy bằng cách đặt biến running thành false
+	}
+
+	public void resetGame() {
+		stop(); // Dừng vòng lặp chạy trò chơi
+		game = new Game(); // Khởi tạo lại trò chơi
+		running = true; // Bắt đầu chạy lại vòng lặp
+
+		// Tạo một luồng mới và chạy phương thức run() trên đó
+		thread = new Thread(this, "GameThread");
+		thread.start();
+//		run();
+
+	}
+
+//	
 	@Override
 	public void run() {
 		init();

@@ -7,38 +7,59 @@ import javax.swing.JPanel;
 
 import game.controller.GameplayPanel;
 
-//Điểm vào của ứng dụng
 public class GameLauncher {
-	private static UIPanel uiPanel;
+    private static JFrame window;
+    private static UIPanel uiPanel;
 
-	public static void main(String[] args) {
-		JFrame window = new JFrame();
-		window.setTitle("Pacman"); // Đặt tiêu đề của cửa sổ là "Pacman"
-		window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // Thiết lập hành động mặc định khi đóng cửa sổ là kết
-																// thúc ứng dụng
+    public static void main(String[] args) {
+        createGameWindow(); // Tạo cửa sổ trò chơi
 
-		JPanel gameWindow = new JPanel(); // Tạo một JPanel để chứa giao diện trò chơi và giao diện người dùng
+        // Khởi tạo giao diện trò chơi và giao diện người dùng
+        JPanel gameWindow = new JPanel();
+        GameplayPanel gameplayPanel = createGameplayPanel();
+        gameWindow.add(gameplayPanel);
+        createUIPanel(gameWindow, gameplayPanel);
 
-		// Tạo "vùng chơi" của trò chơi
-		try {
-			gameWindow.add(new GameplayPanel(448, 496)); // Thêm một GameplayPanel vào gameWindow với kích thước 448x496
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+        // Hiển thị cửa sổ
+        window.setContentPane(gameWindow);
+        window.pack();
+        window.setLocationRelativeTo(null);
+        window.setVisible(true);
+    }
 
-		// Tạo giao diện người dùng (để hiển thị điểm)
-		uiPanel = new UIPanel(256, 496); // Tạo một UIPanel mới với kích thước 256x496
-		gameWindow.add(uiPanel); // Thêm UIPanel vào gameWindow
+    // Tạo cửa sổ trò chơi
+    private static void createGameWindow() {
+        window = new JFrame();
+        window.setTitle("Pacman");
+        window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        window.setResizable(false);
+    }
 
-		window.setContentPane(gameWindow);
-		window.setResizable(false);
-		window.pack();
-		window.setLocationRelativeTo(null);
-		window.setVisible(true);
-	}
+    // Tạo GameplayPanel
+    private static GameplayPanel createGameplayPanel() {
+        try {
+            return new GameplayPanel(448, 496);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 
-	// Phương thức để truy cập UIPanel từ các lớp khác
-	public static UIPanel getUIPanel() {
-		return uiPanel;
-	}
+    // Tạo UIPanel và thiết lập gameplayPanel
+    private static void createUIPanel(JPanel gameWindow, GameplayPanel gameplayPanel) {
+        uiPanel = new UIPanel(256, 496);
+        uiPanel.setGameplayPanel(gameplayPanel);
+        gameWindow.add(uiPanel);
+    }
+
+    // Khởi chạy lại ứng dụng
+    public static void restartGame() {
+        window.dispose(); // Đóng cửa sổ hiện tại
+        main(null); // Khởi chạy lại ứng dụng
+    }
+
+    // Phương thức để truy cập UIPanel từ các lớp khác
+    public static UIPanel getUIPanel() {
+        return uiPanel;
+    }
 }
